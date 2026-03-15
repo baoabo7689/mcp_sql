@@ -1,0 +1,126 @@
+5. Ví dụ MCP server (Node.js)
+install
+npm init -y
+npm install @modelcontextprotocol/sdk mssql
+server.js
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import sql from "mssql";
+
+const server = new Server({
+  name: "sql-mcp-server",
+  version: "1.0.0"
+});
+
+const pool = await sql.connect({
+  user: "sa",
+  password: "password",
+  server: "localhost",
+  database: "mydb",
+  options: {
+    encrypt: false
+  }
+});
+6. Tool: List tables
+server.tool(
+  "list_tables",
+  "List all tables in database",
+  {},
+  async () => {
+
+    const result = await pool.request().query(`
+      SELECT TABLE_NAME
+      FROM INFORMATION_SCHEMA.TABLES
+      WHERE TABLE_TYPE='BASE TABLE'
+    `);
+
+    return {
+      content: JSON.stringify(result.recordset)
+    };
+  }
+);
+7. Tool: Query table
+server.tool(
+  "query_sql",
+  "Run SQL query",
+  {
+    sql: "string"
+  },
+  async ({ sql }) => {
+
+    const result = await pool.request().query(sql);
+
+    return {
+      content: JSON.stringify(result.recordset)
+    };
+  }
+);
+8. Tool: List Stored Procedures
+server.tool(
+  "list_procedures",
+  "List stored procedures",
+  {},
+  async () => {
+
+    const result = await pool.request().query(`
+      SELECT name
+      FROM sys.procedures
+    `);
+
+    return {
+      content: JSON.stringify(result.recordset)
+    };
+  }
+);
+9. Tool: View Stored Procedure
+server.tool(
+  "get_procedure",
+  "Get stored procedure code",
+  {
+    name: "string"
+  },
+  async ({ name }) => {
+
+    const result = await pool.request()
+      .input("name", sql.NVarChar, name)
+      .query(`
+        SELECT OBJECT_DEFINITION (OBJECT_ID(@name)) as code
+      `);
+
+    return {
+      content: result.recordset[0].code
+    };
+  }
+);
+10. Tool: Run Stored Procedure
+server.tool(
+  "run_procedure",
+  "Execute stored procedure",
+  {
+    name: "string"
+  },
+  async ({ name }) => {
+
+    const result = await pool.request()
+      .execute(name);
+
+    return {
+      content: JSON.stringify(result.recordset)
+    };
+  }
+);
+
+server.tool(
+  "create_procedure",
+  "Create stored procedure",
+  {
+    sql: "string"
+  },
+  async ({ sql }) => {
+
+    await pool.request().query(sql);
+
+    return {
+      content: "Stored procedure created"
+    };
+  }
+);

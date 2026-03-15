@@ -1,0 +1,17 @@
+{
+  "servers": {
+    "sql-mcp-server": {
+      "command": "node",
+      "args": ["server.js"],
+      "env": {
+        "SQL_USER": "sa",
+        "SQL_PASSWORD": "your_password",
+        "SQL_SERVER": "localhost",
+        "SQL_DATABASE": "mydb",
+        "SQL_PORT": "1433",
+        "SQL_ENCRYPT": "false",
+        "SQL_TRUST_SERVER_CERTIFICATE": "true"
+      }
+    }
+  }
+}
